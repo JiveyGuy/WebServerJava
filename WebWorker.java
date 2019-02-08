@@ -35,6 +35,8 @@ public class WebWorker implements Runnable
   
   /**
    * print debugging statements, works for iterables and single strings
+   * ( info ) to print out print former System.err messages set DEBUG = true
+   * @param input the string to print
    */
   private void debug(String...input){
     if( !DEBUG )return;
