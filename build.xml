@@ -1,0 +1,7 @@
+<?xml version = "1.0"?>
+<project name = "Hello World Project" default = "main">
+   <target name = "main">
+      <delete file="*.class"/>
+      <javac srcdir="." />
+   </target>
+</project>

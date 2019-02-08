@@ -31,7 +31,7 @@ import java.util.Scanner;
 public class WebWorker implements Runnable
 {
   private Socket socket;
-  private final boolean DEBUG = true;
+  private final boolean DEBUG = false;
   
   /**
    * print debugging statements, works for iterables and single strings
@@ -64,8 +64,8 @@ public class WebWorker implements Runnable
       InputStream  is = socket.getInputStream();
       OutputStream os = socket.getOutputStream();
       
-      String locationString = readHTTPRequest(is);
-      debug( "File exist? " + fileExists( locationString )); 
+      String locationString = readHTTPRequest(is).trim();
+      debug( "File ("+locationString+")exist? " + fileExists( locationString )); 
       if( locationString.equals("default") || fileExists(locationString) ){
         writeHTTPHeader(os,"text/html");
         writeContent(os, locationString);
@@ -78,13 +78,17 @@ public class WebWorker implements Runnable
       socket.close();
       
     } catch (Exception e) {
-      System.err.println("Output error: "+e);
+      debug("Output error: "+e);
     }
     
-    System.err.println("Done handling connection.");
+    debug("Done handling connection.");
     return;
   }
   
+  /**
+   * Checks that a file exists, is html (if no .html type it's added ), is not dir, if is too short to have .html tag
+   * Will auto add .html if missing. 
+   **/
   private boolean fileExists(String locationString){
 	  String fileName;
 	  if( locationString.length() > 4 )
@@ -118,11 +122,11 @@ public class WebWorker implements Runnable
           //debug("Is not request, no location string. Result default.");
         }
         
-        System.err.println("Request line: ("+line+")");
+        debug("Request line: ("+line+")");
         if (line.length()==0) break;
         
       } catch (Exception e) {
-        System.err.println("Request error: "+e);
+        debug("Request error: "+e);
         break;
       }
     }
