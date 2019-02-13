@@ -31,7 +31,7 @@ import java.util.Scanner;
 public class WebWorker implements Runnable
 {
   private Socket socket;
-  private final boolean DEBUG = false;
+  private final boolean DEBUG = true;
   
   /**
    * print debugging statements, works for iterables and single strings
@@ -60,27 +60,31 @@ public class WebWorker implements Runnable
    **/
   public void run()
   {
+    
+    String locationString = "";
     debug("Connection incomming.");
+    
     try {
       
       InputStream  is = socket.getInputStream();
       OutputStream os = socket.getOutputStream();
-      
-      String locationString = readHTTPRequest(is).trim();
-      debug( "File ("+locationString+")exist? " + fileExists( locationString )); 
-      if( locationString.equals("default") || fileExists(locationString) ){
-        writeHTTPHeader(os,"text/html");
-        writeContent(os, locationString);
-      } 
-      else {
-        write404(os, locationString );
+      try{ 
+        
+        locationString = readHTTPRequest(is).trim();
+        Functionality funcs = new Functionality( locationString );
+        writeHTTPHeader(os, funcs.getContentType());
+        writeContent(os, funcs);
+      } catch ( InvalidLocationException ile ){
+        
+        debug( ile.toString() );
+        write404(os,  locationString);
       }
       
       os.flush();
       socket.close();
-      
     } catch (Exception e) {
-      debug("Output error: "+e);
+      e.printStackTrace();
+      debug("Output error: " + e.toString());
     }
     
     debug("Done handling connection.");
@@ -88,27 +92,11 @@ public class WebWorker implements Runnable
   }
   
   /**
-   * Checks that a file exists, is html (if no .html type it's added ), is not dir, if is too short to have .html tag
-   * Will auto add .html if missing. 
-   **/
-  private boolean fileExists(String locationString){
-	  String fileName;
-	  if( locationString.length() > 4 )
-	  	fileName = (locationString.substring( locationString.length()-5, locationString.length()).equals(".html")) ? (System.getProperty("user.dir")+(locationString)).trim() : (System.getProperty("user.dir")+(locationString)).trim() + ".html";
-	  else 
-		fileName = (System.getProperty("user.dir")+(locationString)).trim() + ".html";
-	  File file = new File ( fileName );
-	  return file.exists() && 
-		  !file.isDirectory() && 
-		  file.isFile();
-  }
-  
-  /**
    * Read the HTTP request header.
    **/
   private String readHTTPRequest(InputStream is)
   {
-    String line, result = "default";
+    String line, result = "/default";
     BufferedReader r = new BufferedReader(new InputStreamReader(is));
     
     while (true) {
@@ -144,17 +132,13 @@ public class WebWorker implements Runnable
   {
     Date d = new Date();
     DateFormat df = DateFormat.getDateTimeInstance();
-    df.setTimeZone(TimeZone.getTimeZone("GMT"));
-    
+    df.setTimeZone(TimeZone.getTimeZone("GMT")); 
     debug("response http OK");
     os.write("HTTP/1.1 200 OK\n".getBytes());
-    
     os.write("Date: ".getBytes());
     os.write((df.format(d)).getBytes());
     os.write("\n".getBytes());
     os.write("Server: Jon's very own server\n".getBytes());
-    //os.write("Last-Modified: Wed, 08 Jan 2003 23:11:55 GMT\n".getBytes());
-    //os.write("Content-Length: 438\n".getBytes()); 
     os.write("Connection: close\n".getBytes());
     os.write("Content-Type: ".getBytes());
     os.write(contentType.getBytes());
@@ -170,8 +154,13 @@ public class WebWorker implements Runnable
   private void write404(OutputStream os, String locationString) throws Exception
   {
     os.write(("HTTP/1.0 404 Not Found\r\n"+
-             "Content-type: text/html\r\n\r\n"+
-             "<!DOCTYPE html PUBLIC \"-//IETF//DTD HTML 2.0//EN\"><html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=windows-1252\"><title>404 Not Found</title></head><body><h1>Not Found</h1><p>The requested URL "+locationString+" was not found on this server.</p></body></html>").getBytes());
+              "Content-type: text/html\r\n\r\n"+
+              "<!DOCTYPE html PUBLIC \"-//IETF//"+
+              "DTD HTML 2.0//EN\"><html><head><meta"+
+              " http-equiv=\"content-type\" content=\"text/html;"+
+              " charset=windows-1252\"><title>404 Not Found</title></head><body>"+
+              "<h1>Not Found</h1><p>The requested URL "+locationString+
+              " was not found on this server.</p></body></html>").getBytes());
     return;
   }
   
@@ -180,27 +169,22 @@ public class WebWorker implements Runnable
    * be done after the HTTP header has been written out.
    * @param os is the OutputStream object to write to
    **/
-  private void writeContent(OutputStream os, String locationString) throws Exception
+  private void writeContent(OutputStream os, Functionality funcs) throws Exception
   {
-    if( locationString.equals("default") ){
-      os.write("<html><head></head><body>\n".getBytes());
-      os.write("<h3>My web server works!</h3>\n".getBytes());
-      os.write("</body></html>\n".getBytes());
+ 
+    if(funcs.getType().equals("html")){
+      String[] data = funcs.getFileData();
+      for( String itor :  data ){
+        
+        debug( "writting : " + itor );
+        os.write( (itor+"\r\n").getBytes() );
+      }
     } else {
-	    String fileName;
-	    if( locationString.length() > 4 )
-                fileName = (locationString.substring( locationString.length()-5, locationString.length()).equals(".html")) ? (System.getProperty("user.dir")+(locationString)).trim() : (System.getProperty("user.dir")+(locationString)).trim() + ".html";
-	    else
-                fileName = (System.getProperty("user.dir")+(locationString)).trim() + ".html";
-	    Date d = new Date();
-	    DateFormat df = DateFormat.getDateTimeInstance();
-	    df.setTimeZone(TimeZone.getTimeZone("GMT"));
-
-	    Scanner input = new Scanner( new File(fileName) );
-      while( input.hasNextLine() ) os.write( (input.nextLine().replace("<cs371date>",df.format(d)).replace("<cs371server>","Jivey's Workstation").replace("\t","&emsp;")).getBytes("UTF-8") );
+      ByteArrayOutputStream byteData = funcs.getByteFile();
+      byteData.writeTo( os ); 
     }
-  }
+  }  
   
-} // end class
+} 
 
 
