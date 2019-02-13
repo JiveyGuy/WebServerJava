@@ -1,7 +1,12 @@
-<?xml version = "1.0"?>
-<project name = "Hello World Project" default = "main">
-   <target name = "main">
-      <delete file="*.class"/>
-      <javac srcdir="." />
-   </target>
+
+<project name = "Program 1 P 2" default = "compile">
+	<property name = "src.dir" value = "./"/>
+ 	<property name = "build.dir" value = "test/"/>
+   	<target name = "run" depends = "compile">
+      	<java classpath = "test/" classname = "WebServer"  fork="true" dir = "test/"/>
+   	</target>
+   	<target name = "compile">
+      	<delete file="test/*.class"/>
+      	<javac destdir = "${build.dir}" srcdir="${src.dir}" includeAntRuntime = "false"  />
+   	</target>
 </project>

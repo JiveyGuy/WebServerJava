@@ -31,7 +31,7 @@ import java.util.Scanner;
 public class WebWorker implements Runnable
 {
   private Socket socket;
-  private final boolean DEBUG = true;
+  private final boolean DEBUG = false;
   
   /**
    * print debugging statements, works for iterables and single strings
@@ -69,9 +69,12 @@ public class WebWorker implements Runnable
       InputStream  is = socket.getInputStream();
       OutputStream os = socket.getOutputStream();
       try{ 
-        
+        Functionality funcs;
         locationString = readHTTPRequest(is).trim();
-        Functionality funcs = new Functionality( locationString );
+        if( locationString.equals( "/favicon.ico" ) )
+          funcs = new Functionality( locationString , true);
+        else
+          funcs = new Functionality( locationString , false);
         writeHTTPHeader(os, funcs.getContentType());
         writeContent(os, funcs);
       } catch ( InvalidLocationException ile ){
