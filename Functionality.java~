@@ -1,0 +1,43 @@
+public class Functionality{
+  private String location;
+  private String type;
+  private String name;
+ 
+  public Functionality(String location){
+    this.location = location;
+    parseFileInfo();
+  }
+  
+  public void parseFileInfo(){
+    String[] temp = location.split(".");
+    name = temp[0];
+    for( int x = 1; x < temp.length; x++ ){
+      if( x == temp.length - 1 ){
+        type = temp[x];
+      } else {
+        name += "." + temp[x];  
+      }
+    } 
+  }
+  
+  public static void main(String args[]){
+    switch( Ineteger.parseInt( args[0] ) ){
+      case 0 :
+        Functionality test;
+        try {
+        test = new Functionality( args[1] );
+        catch ( ArrayIndexOutOfBoundsException e ){
+          test = new Functionality( "" );
+        }
+        System.out.println( "TESTING CONST:\nlocation = " + location + "\nname = " + name + "\ntype = " + type);
+        break;
+      }
+    }
+    
+  }
+  
+  class InvalidLocationException extends Exception{
+    public InvalidLocationException(String s){
+      super( s ); 
+    }
+  }
