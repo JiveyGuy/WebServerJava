@@ -105,7 +105,7 @@ public class WebWorker implements Runnable
         line = r.readLine();
         if( line.contains("GET") && !line.contains("GET / HTTP/1.1")){
           
-          //debug("is request and unique location string = " + line.substring(3,line.length()-8));
+          debug("is request and unique location string = " + line.substring(3,line.length()-8));
           result = line.substring(4,line.length()-8);
           
         } else {
@@ -136,9 +136,10 @@ public class WebWorker implements Runnable
     debug("response http OK");
     os.write("HTTP/1.1 200 OK\n".getBytes());
     os.write("Date: ".getBytes());
+    os.write("Host: Slack".getBytes());
     os.write((df.format(d)).getBytes());
     os.write("\n".getBytes());
-    os.write("Server: Jon's very own server\n".getBytes());
+    os.write("Server: Slack\n".getBytes());
     os.write("Connection: close\n".getBytes());
     os.write("Content-Type: ".getBytes());
     os.write(contentType.getBytes());
@@ -158,7 +159,7 @@ public class WebWorker implements Runnable
               "<!DOCTYPE html PUBLIC \"-//IETF//"+
               "DTD HTML 2.0//EN\"><html><head><meta"+
               " http-equiv=\"content-type\" content=\"text/html;"+
-              " charset=windows-1252\"><title>404 Not Found</title></head><body>"+
+              " charset=windows-1252\"><title>Slack: 404 Not Found</title></head><body>"+
               "<h1>Not Found</h1><p>The requested URL "+locationString+
               " was not found on this server.</p></body></html>").getBytes());
     return;
